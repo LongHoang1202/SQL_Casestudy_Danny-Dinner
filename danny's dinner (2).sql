@@ -1,3 +1,4 @@
+-- CREATE DATABASE
 CREATE TABLE sales (
   "customer_id" VARCHAR(1),
   "order_date" DATE,
@@ -49,15 +50,18 @@ select * from members
 select * from menu
 select * from sales
 
+-- 1. What is the total amount each customer spent at the restaurant?
 select s.customer_id, sum(price) as total_amount
 from sales as s
 join menu as m on s.product_id=m.product_id
 group by s.customer_id;
 
+-- 2. How many days has each customer visited the restaurant?
 select customer_id, count(order_date) as total_date
 from sales
 group by customer_id;
 
+-- 3. What was the first item from the menu purchased by each customer?
 WITH ordered_sales_cte AS
 (
  SELECT s.customer_id, s.order_date, m.product_name,
@@ -72,12 +76,14 @@ FROM ordered_sales_cte
 WHERE rank = 1
 group by customer_id, product_name;
 
+-- 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 select top 1 count(s.product_id) as most_purchase, m.product_name
 from sales as s
 join menu as m on s.product_id=m.product_id
 group by s.product_id, product_name
 order by most_purchase desc;
 
+-- 5. Which item was the most popular for each customer?
 with fav_item_cte as
 (
 select s.customer_id, m.product_name, 
@@ -91,13 +97,7 @@ select customer_id, product_name
 from fav_item_cte
 where rank=1
 
-
-select top 1 m.product_name, count(s.product_id) as most_purchased
-from sales as s
-join menu as m on s.product_id=m.product_id
-group by s.product_id, m.product_name
-order by most_purchased desc;
-
+-- 6. Which item was purchased first by the customer before they became a member?
 with first_purchased_cte as
 (
 select s.customer_id, m.join_date, s.order_date, s.product_id, 
@@ -113,6 +113,7 @@ join menu as n
 on f.product_id=n.product_id
 where rank=1;
 
+-- 7. What is the total items and amount spent for each member before they became a member?
 select s.customer_id, count(distinct s.product_id) as item_amount, sum(mm.price) as total_sale
 from sales as s
 join members as m on s.customer_id=m.customer_id
@@ -120,6 +121,8 @@ join menu as mm on s.product_id=mm.product_id
 where s.order_date < m.join_date 
 group by s.customer_id;
 
+
+-- 8. If each $1 spent equates to 10 points and sushi has a x2 points multiplier — how many points would each customer have?
 with price_point as
 (
 select *, 
